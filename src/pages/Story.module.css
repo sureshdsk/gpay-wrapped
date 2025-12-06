@@ -56,7 +56,25 @@
 }
 
 .actionButtons {
-  @apply flex flex-col sm:flex-row gap-4 justify-center mt-8;
+  @apply flex flex-col sm:flex-row gap-4 justify-center mt-8 flex-wrap;
+}
+
+.wrappedButton {
+  @apply bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white
+         border-0 px-8 py-4 text-lg font-bold
+         rounded-xl cursor-pointer transition-all duration-300
+         hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/30
+         active:translate-y-0 animate-pulse;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(251, 146, 60, 0.8), 0 0 30px rgba(236, 72, 153, 0.4);
+  }
 }
 
 .categoriesButton {

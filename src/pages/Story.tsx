@@ -104,6 +104,9 @@ export default function Story() {
           </div>
 
           <div className={styles.actionButtons}>
+            <button onClick={() => navigate('/wrapped')} className={styles.wrappedButton}>
+              View Your Wrapped
+            </button>
             <button onClick={() => navigate('/categories')} className={styles.categoriesButton}>
               View Spending Categories
             </button>
