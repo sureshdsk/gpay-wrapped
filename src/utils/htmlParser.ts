@@ -108,36 +108,58 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         const contentCell = cell.querySelector('.content-cell');
         if (!contentCell) return;
 
-        // Get the full HTML content to check for "Failed" badge
-        const contentHTML = contentCell.innerHTML || '';
+        // Get ALL text content from the entire outer-cell (not just content-cell)
+        // The "Failed" status might be in a sibling element
+        const fullCellText = cell.textContent?.trim() || '';
+
+        // Also get just the content cell text for parsing
         const contentText = contentCell.textContent?.trim() || '';
 
-        // Check if this activity is marked as Failed
-        // Failed transactions have "Failed" text in the content
-        // Also check for other failure indicators
-        const lowerContent = contentText.toLowerCase();
-        const failureKeywords = [
-          'failed',
-          'declined',
-          'cancelled',
-          'canceled',
-          'rejected',
-          'unsuccessful',
-        ];
+        // Debug: log some activities to see their structure
+        if (index >= 0 && index <= 5) {
+          console.log(`Activity ${index} fullCellText:`, JSON.stringify(fullCellText.substring(0, 400)));
+        }
 
-        const isFailed = failureKeywords.some(keyword => lowerContent.includes(keyword));
+        // Check if this activity is marked as Failed
+        // Failed transactions contain the word "Failed" somewhere in the FULL cell content
+        const failureKeywords = ['failed', 'declined', 'cancelled', 'canceled', 'rejected', 'unsuccessful'];
+
+        // Create a regex pattern to match failure keywords as whole words
+        const failurePattern = new RegExp(`\\b(${failureKeywords.join('|')})\\b`, 'i');
+
+        // Check the full cell text (not just content-cell) for failure status
+        const isFailed = failurePattern.test(fullCellText);
 
         if (isFailed) {
           failedCount++;
           // Skip failed transactions - don't add them to activities
-          if (index < 10 || failedCount <= 5) {
-            console.log(`Skipping failed activity ${index}:`, contentText.substring(0, 150));
+          if (failedCount <= 10) {
+            console.log(`Skipping failed activity ${index}:`, fullCellText.substring(0, 250));
           }
           return;
         }
 
-        // Split by newlines to get description and date
-        const parts = contentText.split('\n').map(p => p.trim()).filter(Boolean);
+        // Split content by newlines, line breaks, or use child elements
+        let parts: string[] = [];
+
+        // Try splitting by newlines first
+        const textParts = contentText.split(/[\n\r]+/).map(p => p.trim()).filter(Boolean);
+
+        // If we only got 1 part, the HTML might be using elements instead of newlines
+        // Try to extract from child elements
+        if (textParts.length <= 2) {
+          const allElements = contentCell.querySelectorAll('*');
+          parts = Array.from(allElements)
+            .map(el => el.textContent?.trim() || '')
+            .filter(Boolean);
+
+          // If still no good parts, fall back to text split
+          if (parts.length === 0) {
+            parts = textParts;
+          }
+        } else {
+          parts = textParts;
+        }
 
         if (parts.length === 0) return;
 
