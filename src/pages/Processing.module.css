@@ -40,7 +40,7 @@
 }
 
 .stageComplete .stageIcon {
-  @apply bg-accent-500 text-white;
+  @apply bg-green-500 text-white;
 }
 
 .stageLabel {
