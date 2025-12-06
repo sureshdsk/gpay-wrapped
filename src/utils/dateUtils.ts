@@ -25,18 +25,20 @@ export function filterTransactionsByYear(
   const failedCount = transactions.filter(t => isFailedTransaction(t.status)).length;
   const successfulTransactions = transactions.filter(t => !isFailedTransaction(t.status));
 
-  console.log(`Transactions: ${transactions.length} total, ${failedCount} failed, ${successfulTransactions.length} successful`);
+  if (year === 'all') {
+    console.log(`Transactions: ${transactions.length} total, ${failedCount} failed, ${successfulTransactions.length} successful (all years)`);
+    return successfulTransactions;
+  }
 
-  // Log unique statuses for debugging
-  const uniqueStatuses = [...new Set(transactions.map(t => t.status))];
-  console.log('Unique transaction statuses:', uniqueStatuses);
-
-  if (year === 'all') return successfulTransactions;
-
-  return successfulTransactions.filter(t => {
+  // Filter by year
+  const yearFiltered = successfulTransactions.filter(t => {
     const transactionYear = t.time.getFullYear();
     return transactionYear === parseInt(year);
   });
+
+  console.log(`Transactions: ${transactions.length} total, ${failedCount} failed, ${successfulTransactions.length} successful, ${yearFiltered.length} in ${year}`);
+
+  return yearFiltered;
 }
 
 /**
@@ -48,10 +50,13 @@ export function filterGroupExpensesByYear(
 ): GroupExpense[] {
   if (year === 'all') return expenses;
 
-  return expenses.filter(e => {
+  const filtered = expenses.filter(e => {
     const expenseYear = e.creationTime.getFullYear();
     return expenseYear === parseInt(year);
   });
+
+  console.log(`Group Expenses: ${expenses.length} total, ${filtered.length} in ${year}`);
+  return filtered;
 }
 
 /**
@@ -63,14 +68,18 @@ export function filterCashbackRewardsByYear(
 ): CashbackReward[] {
   if (year === 'all') return rewards;
 
-  return rewards.filter(r => {
+  const filtered = rewards.filter(r => {
     const rewardYear = r.date.getFullYear();
     return rewardYear === parseInt(year);
   });
+
+  console.log(`Cashback Rewards: ${rewards.length} total, ${filtered.length} in ${year}`);
+  return filtered;
 }
 
 /**
  * Filter vouchers by year (based on expiry date)
+ * Note: Vouchers don't have a creation date, so we filter by expiry date
  */
 export function filterVouchersByYear(
   vouchers: Voucher[],
@@ -78,10 +87,13 @@ export function filterVouchersByYear(
 ): Voucher[] {
   if (year === 'all') return vouchers;
 
-  return vouchers.filter(v => {
+  const filtered = vouchers.filter(v => {
     const voucherYear = v.expiryDate.getFullYear();
     return voucherYear === parseInt(year);
   });
+
+  console.log(`Vouchers: ${vouchers.length} total, ${filtered.length} expiring in ${year}`);
+  return filtered;
 }
 
 /**
@@ -126,28 +138,41 @@ export function filterActivitiesByYear(
   const failedActivities = activities.filter(a => isFailedActivity(a));
   const successfulActivities = activities.filter(a => !isFailedActivity(a));
 
-  console.log(`Activities: ${activities.length} total, ${failedActivities.length} failed, ${successfulActivities.length} successful`);
-
-  // Log a few failed activities for debugging
-  if (failedActivities.length > 0) {
-    console.log('Sample failed activities:', failedActivities.slice(0, 5).map(a => ({
-      title: a.title,
-      description: a.description?.substring(0, 100),
-    })));
+  if (year === 'all') {
+    console.log(`Activities: ${activities.length} total, ${failedActivities.length} failed, ${successfulActivities.length} successful (all years)`);
+    return successfulActivities;
   }
 
-  // Also log a few that passed to verify they don't contain "failed"
-  console.log('Sample successful activities:', successfulActivities.slice(0, 3).map(a => ({
-    title: a.title,
-    description: a.description?.substring(0, 100),
-  })));
-
-  if (year === 'all') return successfulActivities;
-
-  return successfulActivities.filter(activity => {
+  // Filter by year
+  const yearFiltered = successfulActivities.filter(activity => {
     const activityYear = activity.time.getFullYear();
     return activityYear === parseInt(year);
   });
+
+  // Get year distribution for debugging
+  const yearCounts = new Map<number, number>();
+  successfulActivities.forEach(a => {
+    const yr = a.time.getFullYear();
+    yearCounts.set(yr, (yearCounts.get(yr) || 0) + 1);
+  });
+
+  console.log(`Activities: ${activities.length} total, ${failedActivities.length} failed, ${successfulActivities.length} successful, ${yearFiltered.length} in ${year}`);
+  console.log('Activity year distribution:', Array.from(yearCounts.entries()).sort((a, b) => a[0] - b[0]).map(([yr, count]) => `${yr}: ${count}`).join(', '));
+
+  // Show sample of first and last few activities with dates
+  if (successfulActivities.length > 0) {
+    const samples = [
+      ...successfulActivities.slice(0, 3),
+      ...successfulActivities.slice(-3)
+    ];
+    console.log('Sample activity dates:', samples.map(a => ({
+      title: a.title.substring(0, 30),
+      date: a.time.toISOString().split('T')[0],
+      year: a.time.getFullYear()
+    })));
+  }
+
+  return yearFiltered;
 }
 
 /**

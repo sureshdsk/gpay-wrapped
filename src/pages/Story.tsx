@@ -2,19 +2,28 @@ import { useMemo } from 'react';
 import { useDataStore } from '../stores/dataStore';
 import { useNavigate } from 'react-router-dom';
 import { convertToINR } from '../utils/categoryUtils';
-import { filterTransactionsByYear, filterActivitiesByYear } from '../utils/dateUtils';
+import {
+  filterTransactionsByYear,
+  filterActivitiesByYear,
+  filterGroupExpensesByYear,
+  filterCashbackRewardsByYear,
+  filterVouchersByYear,
+} from '../utils/dateUtils';
 import styles from './Story.module.css';
 
 export default function Story() {
   const navigate = useNavigate();
   const { parsedData, insights, selectedYear } = useDataStore();
 
-  // Filter data by selected year
+  // Filter ALL data by selected year
   const filteredData = useMemo(() => {
     if (!parsedData) return null;
     return {
       transactions: filterTransactionsByYear(parsedData.transactions, selectedYear),
       activities: filterActivitiesByYear(parsedData.activities, selectedYear),
+      groupExpenses: filterGroupExpensesByYear(parsedData.groupExpenses, selectedYear),
+      cashbackRewards: filterCashbackRewardsByYear(parsedData.cashbackRewards, selectedYear),
+      voucherRewards: filterVouchersByYear(parsedData.voucherRewards, selectedYear),
     };
   }, [parsedData, selectedYear]);
 
@@ -74,11 +83,11 @@ export default function Story() {
               <div className={styles.statLabel}>Transactions</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.statNumber}>{parsedData.groupExpenses.length}</div>
+              <div className={styles.statNumber}>{filteredData?.groupExpenses.length ?? 0}</div>
               <div className={styles.statLabel}>Group Expenses</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.statNumber}>{parsedData.voucherRewards.length}</div>
+              <div className={styles.statNumber}>{filteredData?.voucherRewards.length ?? 0}</div>
               <div className={styles.statLabel}>Vouchers</div>
             </div>
           </div>

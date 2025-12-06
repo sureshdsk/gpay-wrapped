@@ -158,16 +158,26 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
 
         if (parts.length === 0) return;
 
-        const title = parts[0]; // e.g., "Received ₹60.00"
-        const dateStr = parts[1]; // e.g., "4 Dec 2025, 10:30:00 IST"
+        // Extract date from the content text using regex
+        // Date format: "4 Dec 2025, 23:08:00 GMT+05:30" or "4 Dec 2025, 23:08:00 IST"
+        const dateRegex = /(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4},\s+\d{2}:\d{2}:\d{2}\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
+        const dateMatch = contentText.match(dateRegex);
 
-        // Parse the date
         let activityDate = new Date();
-        if (dateStr) {
-          // Google uses format like "4 Dec 2025, 10:30:00 IST"
+        let dateStr: string | undefined;
+
+        if (dateMatch) {
+          dateStr = dateMatch[1];
           // Remove timezone and parse
           const cleanDateStr = dateStr.replace(/,?\s*(IST|GMT[+-]\d{2}:\d{2})$/, '').trim();
           activityDate = new Date(cleanDateStr);
+        }
+
+        // Extract title (text before the date)
+        let title = parts[0];
+        if (dateMatch) {
+          // Remove the date from the title if it's concatenated
+          title = contentText.substring(0, contentText.indexOf(dateMatch[0])).trim();
         }
 
         // NEW: Parse transaction data
@@ -207,7 +217,66 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
       }
     });
 
+    // Get year breakdown BEFORE filtering
+    const yearBreakdown = new Map<number, { total: number; failed: number; successful: number }>();
+
+    outerCells.forEach((cell, index) => {
+      try {
+        const contentCell = cell.querySelector('.content-cell');
+        if (!contentCell) return;
+
+        const contentText = contentCell.textContent?.trim() || '';
+        const parts = contentText.split('\n').map(p => p.trim()).filter(Boolean);
+        if (parts.length === 0) return;
+
+        const dateStr = parts[1];
+        let activityDate = new Date();
+        if (dateStr) {
+          const cleanDateStr = dateStr.replace(/,?\s*(IST|GMT[+-]\d{2}:\d{2})$/, '').trim();
+          activityDate = new Date(cleanDateStr);
+        }
+
+        const year = activityDate.getFullYear();
+        if (!yearBreakdown.has(year)) {
+          yearBreakdown.set(year, { total: 0, failed: 0, successful: 0 });
+        }
+
+        const fullCellText = cell.textContent?.trim() || '';
+        const failureKeywords = ['failed', 'declined', 'cancelled', 'canceled', 'rejected', 'unsuccessful'];
+        const failurePattern = new RegExp(`\\b(${failureKeywords.join('|')})\\b`, 'i');
+        const isFailed = failurePattern.test(fullCellText);
+
+        const stats = yearBreakdown.get(year)!;
+        stats.total++;
+        if (isFailed) {
+          stats.failed++;
+        } else {
+          stats.successful++;
+        }
+      } catch (error) {
+        // Ignore errors in year counting
+      }
+    });
+
     console.log(`Successfully parsed ${activities.length} activities from ${outerCells.length} cells (${failedCount} failed transactions skipped)`);
+
+    // Show year breakdown
+    console.log('\n📊 YEAR BREAKDOWN (from HTML):');
+    Array.from(yearBreakdown.entries())
+      .sort((a, b) => a[0] - b[0])
+      .forEach(([year, stats]) => {
+        console.log(`  ${year}: ${stats.total} total (${stats.successful} successful, ${stats.failed} failed)`);
+      });
+    console.log('');
+
+    // Detailed count breakdown
+    console.log(`Activity breakdown: ${outerCells.length} total cells found, ${failedCount} failed/cancelled, ${activities.length} successful added`);
+    console.log(`Math check: ${outerCells.length} - ${failedCount} = ${outerCells.length - failedCount} (expected successful activities)`);
+
+    // Verify if expected matches actual
+    if (activities.length !== outerCells.length - failedCount) {
+      console.warn(`⚠️ MISMATCH: Expected ${outerCells.length - failedCount} but got ${activities.length}. Some activities may have been skipped due to missing data.`);
+    }
 
     return { success: true, data: activities };
   } catch (error) {
