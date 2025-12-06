@@ -37,52 +37,7 @@ export function convertToINR(amount: Currency): number {
 export function categorizeTransaction(description: string): TransactionCategory {
   const lowerDesc = description.toLowerCase();
 
-  // Check for bank account transfers first (self-transfers, account-to-account)
-  const bankTransferPatterns = [
-    /using bank account/i,      // "Paid ₹X using Bank Account XXXX"
-    /bank transfer/i,
-    /to\s+\w*bank/i,            // "to SBI Bank", "to HDFC Bank"
-    /from\s+\w*bank/i,
-    /neft/i,
-    /imps/i,
-    /rtgs/i,
-    /upi.*bank/i,
-    /account\s+xxxx/i,          // masked account numbers
-  ];
-
-  for (const pattern of bankTransferPatterns) {
-    if (pattern.test(description)) {
-      return 'Bank Transfers';
-    }
-  }
-
-  // Check for person-to-person transfers (common in GPay)
-  const transferPatterns = [
-    /^sent\s+[₹$]/i,           // "Sent ₹500"
-    /^received\s+[₹$]/i,       // "Received ₹500"
-    /^paid\s+[₹$].*to\s+[a-z]/i,    // "Paid ₹500 to John" (to a person, not bank)
-    /request/i,                 // payment requests
-    /split/i,                   // split payments
-    /settle/i,                  // settlement
-  ];
-
-  for (const pattern of transferPatterns) {
-    if (pattern.test(description)) {
-      // But first check if it matches a business category
-      for (const [category, keywords] of Object.entries(categories)) {
-        if (category === 'Others') continue;
-        for (const keyword of keywords as string[]) {
-          if (lowerDesc.includes(keyword.toLowerCase())) {
-            return category as TransactionCategory;
-          }
-        }
-      }
-      // If no business match, it's a personal transfer
-      return 'Transfers';
-    }
-  }
-
-  // Check each category's keywords
+  // FIRST: Check each category's keywords (business/service categories)
   for (const [category, keywords] of Object.entries(categories)) {
     if (category === 'Others') continue; // Skip "Others" in first pass
     for (const keyword of keywords as string[]) {
@@ -92,10 +47,37 @@ export function categorizeTransaction(description: string): TransactionCategory 
     }
   }
 
-  // Check if it looks like a personal transfer without clear patterns
-  // Names typically start with uppercase in descriptions
-  const namePattern = /(?:to|from|paid)\s+[A-Z][a-z]+/;
-  if (namePattern.test(description)) {
+  // SECOND: Check for actual bank transfers (NEFT/IMPS/RTGS)
+  const bankTransferPatterns = [
+    /\bneft\b/i,
+    /\bimps\b/i,
+    /\brtgs\b/i,
+    /to\s+\w*\s*bank\s+account/i,  // "to HDFC Bank Account"
+    /from\s+\w*\s*bank\s+account/i,
+  ];
+
+  for (const pattern of bankTransferPatterns) {
+    if (pattern.test(description)) {
+      return 'Bank Transfers';
+    }
+  }
+
+  // THIRD: Check for person-to-person transfers
+  const transferPatterns = [
+    /^sent\s+[₹$]/i,           // "Sent ₹500"
+    /^received\s+[₹$]/i,       // "Received ₹500"
+  ];
+
+  for (const pattern of transferPatterns) {
+    if (pattern.test(description)) {
+      return 'Transfers';
+    }
+  }
+
+  // FOURTH: Check if payment to a person (name pattern)
+  // "Paid to [NAME]" where NAME is capitalized
+  const personPaymentPattern = /(?:paid|to)\s+[A-Z][a-z]+(?:\s+[A-Z])?(?:\s+using\s+bank)/i;
+  if (personPaymentPattern.test(description)) {
     return 'Transfers';
   }
 

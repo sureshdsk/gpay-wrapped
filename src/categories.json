@@ -13,7 +13,15 @@
     "burger",
     "kfc",
     "mcdonald",
-    "foodpanda"
+    "foodpanda",
+    "parotta",
+    "biryani",
+    "chicken",
+    "food",
+    "eat",
+    "dining",
+    "domino",
+    "subway"
   ],
   "Groceries": [
     "bigbasket",
@@ -24,7 +32,11 @@
     "grofers",
     "reliance fresh",
     "vegetable",
-    "kirana"
+    "kirana",
+    "store",
+    "mart",
+    "provision",
+    "fancy store"
   ],
   "Clothing": [
     "myntra",
