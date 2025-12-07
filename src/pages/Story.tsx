@@ -75,12 +75,10 @@ export default function Story() {
 
           <div className={styles.stats}>
             <div className={styles.stat}>
-              <div className={styles.statNumber}>{filteredData?.activities.length ?? 0}</div>
-              <div className={styles.statLabel}>Activities</div>
-            </div>
-            <div className={styles.stat}>
-              <div className={styles.statNumber}>{filteredData?.transactions.length ?? 0}</div>
-              <div className={styles.statLabel}>Transactions</div>
+              <div className={styles.statNumber}>
+                {(filteredData?.activities.length ?? 0) + (filteredData?.transactions.length ?? 0)}
+              </div>
+              <div className={styles.statLabel}>Total Payments</div>
             </div>
             <div className={styles.stat}>
               <div className={styles.statNumber}>{filteredData?.groupExpenses.length ?? 0}</div>
@@ -89,6 +87,10 @@ export default function Story() {
             <div className={styles.stat}>
               <div className={styles.statNumber}>{filteredData?.voucherRewards.length ?? 0}</div>
               <div className={styles.statLabel}>Vouchers</div>
+            </div>
+            <div className={styles.stat}>
+              <div className={styles.statNumber}>{insights.length}</div>
+              <div className={styles.statLabel}>Insights</div>
             </div>
           </div>
 
@@ -118,6 +120,9 @@ export default function Story() {
             </button>
             <button onClick={() => navigate('/categories')} className={styles.categoriesButton}>
               View Spending Categories
+            </button>
+            <button onClick={() => navigate('/data')} className={styles.dataButton}>
+              View All Data (Table)
             </button>
             <button onClick={() => navigate('/')} className={styles.backButton}>
               Upload Another File

@@ -70,6 +70,14 @@
          active:scale-95;
 }
 
+.dataButton {
+  @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white
+         px-6 py-3 text-sm font-medium
+         rounded-xl cursor-pointer transition-all duration-200
+         hover:shadow-lg hover:scale-105
+         active:scale-95;
+}
+
 .backButton {
   @apply bg-transparent text-primary-500 border-0
          px-6 py-3 text-sm font-medium

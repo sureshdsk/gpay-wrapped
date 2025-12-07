@@ -57,14 +57,15 @@ function extractPersonFromDescription(description: string, type: string): {
   const result: { recipient?: string; sender?: string } = {};
 
   if (type === 'sent' || type === 'paid') {
-    // Look for "to [Name]"
-    const toMatch = description.match(/to\s+([A-Z][a-zA-Z\s]+?)(?:\s|$|,|\.)/);
+    // Look for "to [Name]" - capture until "using" keyword or end of string
+    // This handles full merchant names like "M S ARASU CHICKEN CENTRE"
+    const toMatch = description.match(/to\s+([A-Z][A-Z\s]+?)(?:\s+using|\s*$)/i);
     if (toMatch) result.recipient = toMatch[1].trim();
   }
 
   if (type === 'received') {
-    // Look for "from [Name]"
-    const fromMatch = description.match(/from\s+([A-Z][a-zA-Z\s]+?)(?:\s|$|,|\.)/);
+    // Look for "from [Name]" - capture until "using" keyword or end of string
+    const fromMatch = description.match(/from\s+([A-Z][A-Z\s]+?)(?:\s+using|\s*$)/i);
     if (fromMatch) result.sender = fromMatch[1].trim();
   }
 

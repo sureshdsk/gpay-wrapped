@@ -4,6 +4,7 @@ import Processing from './pages/Processing';
 import Story from './pages/Story';
 import Categories from './pages/Categories';
 import Wrapped from './pages/Wrapped';
+import DataTable from './pages/DataTable';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/story" element={<Story />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/wrapped" element={<Wrapped />} />
+        <Route path="/data" element={<DataTable />} />
       </Routes>
     </Router>
   );
