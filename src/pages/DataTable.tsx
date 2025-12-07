@@ -37,6 +37,7 @@ export default function DataTable() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('2025');
   const [monthFilter, setMonthFilter] = useState<string>('all');
+  const [merchantFilter, setMerchantFilter] = useState<string>('all');
 
   // Combine all data into a single table
   const tableData = useMemo((): TableRow[] => {
@@ -140,8 +141,72 @@ export default function DataTable() {
       filtered = filtered.filter(row => row.type === typeFilter);
     }
 
+    // Merchant filter
+    if (merchantFilter !== 'all') {
+      filtered = filtered.filter(row => {
+        // Extract merchant name from the description which already contains "To X" or "From X"
+        const merchantName = row.description.replace(/^(To |From )/i, '').trim();
+        return merchantName === merchantFilter;
+      });
+    }
+
     return filtered;
-  }, [tableData, categoryFilter, typeFilter, yearFilter, monthFilter]);
+  }, [tableData, categoryFilter, typeFilter, yearFilter, monthFilter, merchantFilter]);
+
+  // Get unique merchants for filter (based on currently filtered data, excluding merchant filter itself)
+  const merchants = useMemo(() => {
+    // Filter data by year, month, category, and type (but NOT merchant filter)
+    let dataForMerchants = tableData;
+
+    // Year filter
+    if (yearFilter === 'lifetime') {
+      // Show all data
+    } else if (yearFilter !== 'all') {
+      const year = parseInt(yearFilter);
+      dataForMerchants = dataForMerchants.filter(row => row.date.getFullYear() === year);
+    }
+
+    // Month filter (only applies if year is selected)
+    if (monthFilter !== 'all' && yearFilter !== 'all' && yearFilter !== 'lifetime') {
+      const month = parseInt(monthFilter);
+      dataForMerchants = dataForMerchants.filter(row => row.date.getMonth() === month);
+    }
+
+    // Category filter
+    if (categoryFilter !== 'all') {
+      dataForMerchants = dataForMerchants.filter(row => row.category === categoryFilter);
+    }
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      dataForMerchants = dataForMerchants.filter(row => row.type === typeFilter);
+    }
+
+    // Extract unique merchants from the filtered data
+    const merchantSet = new Set<string>();
+    dataForMerchants.forEach(row => {
+      // Extract merchant name from the description which already contains "To X" or "From X"
+      let merchantName = row.description.replace(/^(To |From )/i, '').trim();
+
+      // Filter out invalid merchant names that are just generic transaction descriptions
+      // These patterns indicate no actual merchant name:
+      // - "Paid ₹XXX using..."
+      // - "Received ₹XXX"
+      // - "Sent ₹XXX using..."
+      // - Descriptions that start with currency symbols or amounts
+      const isInvalid =
+        /^(Paid|Received|Sent)\s+[₹$][\d,]+\.?\d*/i.test(merchantName) ||
+        /^[₹$][\d,]+\.?\d*/i.test(merchantName) ||
+        merchantName.startsWith('using ') ||
+        merchantName === '';
+
+      if (!isInvalid && merchantName) {
+        merchantSet.add(merchantName);
+      }
+    });
+
+    return Array.from(merchantSet).sort();
+  }, [tableData, yearFilter, monthFilter, categoryFilter, typeFilter]);
 
   // Calculate totals with direction awareness
   const totals = useMemo(() => {
@@ -373,6 +438,8 @@ export default function DataTable() {
               if (e.target.value === 'lifetime' || e.target.value === 'all') {
                 setMonthFilter('all');
               }
+              // Reset merchant filter when year changes
+              setMerchantFilter('all');
             }}
             className={styles.filterSelect}
           >
@@ -393,7 +460,11 @@ export default function DataTable() {
           <select
             id="month-filter"
             value={monthFilter}
-            onChange={e => setMonthFilter(e.target.value)}
+            onChange={e => {
+              setMonthFilter(e.target.value);
+              // Reset merchant filter when month changes
+              setMerchantFilter('all');
+            }}
             className={styles.filterSelect}
             disabled={yearFilter === 'lifetime' || yearFilter === 'all'}
           >
@@ -412,7 +483,11 @@ export default function DataTable() {
           <select
             id="category-filter"
             value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
+            onChange={e => {
+              setCategoryFilter(e.target.value);
+              // Reset merchant filter when category changes
+              setMerchantFilter('all');
+            }}
             className={styles.filterSelect}
           >
             <option value="all">All Categories</option>
@@ -431,12 +506,35 @@ export default function DataTable() {
           <select
             id="type-filter"
             value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
+            onChange={e => {
+              setTypeFilter(e.target.value);
+              // Reset merchant filter when type changes
+              setMerchantFilter('all');
+            }}
             className={styles.filterSelect}
           >
             <option value="all">All Types</option>
             <option value="activity">Activity</option>
             <option value="transaction">Transaction</option>
+          </select>
+        </div>
+
+        <div className={styles.filterGroup}>
+          <label htmlFor="merchant-filter" className={styles.filterLabel}>
+            Merchant:
+          </label>
+          <select
+            id="merchant-filter"
+            value={merchantFilter}
+            onChange={e => setMerchantFilter(e.target.value)}
+            className={styles.filterSelect}
+          >
+            <option value="all">All Merchants ({merchants.length})</option>
+            {merchants.map(merchant => (
+              <option key={merchant} value={merchant}>
+                {merchant}
+              </option>
+            ))}
           </select>
         </div>
 

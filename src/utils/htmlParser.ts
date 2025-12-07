@@ -113,8 +113,16 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         // The "Failed" status might be in a sibling element
         const fullCellText = cell.textContent?.trim() || '';
 
-        // Also get just the content cell text for parsing
-        const contentText = contentCell.textContent?.trim() || '';
+        // Convert <br> tags to newlines before extracting text
+        // Clone the content cell to avoid modifying the original DOM
+        const contentCellClone = contentCell.cloneNode(true) as HTMLElement;
+        const brElements = contentCellClone.querySelectorAll('br');
+        brElements.forEach(br => {
+          br.replaceWith('\n');
+        });
+
+        // Get the content with proper line breaks
+        const contentText = contentCellClone.textContent?.trim() || '';
 
         // Check if this activity is marked as Failed
         // Failed transactions contain the word "Failed" somewhere in the FULL cell content
@@ -229,7 +237,14 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         const contentCell = cell.querySelector('.content-cell');
         if (!contentCell) return;
 
-        const contentText = contentCell.textContent?.trim() || '';
+        // Convert <br> tags to newlines for proper parsing
+        const contentCellClone = contentCell.cloneNode(true) as HTMLElement;
+        const brElements = contentCellClone.querySelectorAll('br');
+        brElements.forEach(br => {
+          br.replaceWith('\n');
+        });
+
+        const contentText = contentCellClone.textContent?.trim() || '';
         const parts = contentText.split('\n').map(p => p.trim()).filter(Boolean);
         if (parts.length === 0) return;
 
