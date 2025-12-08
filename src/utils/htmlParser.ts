@@ -169,9 +169,19 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         if (parts.length === 0) return;
 
         // Extract date from the content text using regex
-        // Date format: "Dec 6, 2025, 12:12:14 PM GMT+05:30" or "Nov 10, 2023, 11:45:00 AM IST"
-        const dateRegex = /([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4},\s+\d{1,2}:\d{2}:\d{2}\s+[AP]M\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
-        const dateMatch = contentText.match(dateRegex);
+        // Google Pay has used two different date formats over time:
+        // Format 1 (newer): "8 Dec 2025, 20:11:19 GMT+05:30" (DD Mon YYYY, 24-hour, no AM/PM)
+        // Format 2 (older): "Dec 6, 2025, 12:12:14 PM GMT+05:30" (Mon DD, YYYY, 12-hour with AM/PM)
+        // We need to support both formats
+
+        // Try Format 1 first (DD Mon YYYY, 24-hour)
+        const dateRegex1 = /(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4},\s+\d{1,2}:\d{2}:\d{2}\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
+        // Try Format 2 (Mon DD, YYYY, 12-hour with AM/PM)
+        const dateRegex2 = /([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4},\s+\d{1,2}:\d{2}:\d{2}\s+[AP]M\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
+
+        const dateMatch1 = contentText.match(dateRegex1);
+        const dateMatch2 = contentText.match(dateRegex2);
+        const dateMatch = dateMatch1 || dateMatch2;
 
         let activityDate = new Date();
         let dateStr: string | undefined;
@@ -179,7 +189,7 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         if (dateMatch) {
           dateStr = dateMatch[1];
           // Parse the full date string including timezone
-          // JavaScript Date constructor can handle formats like "8 Dec 2025, 20:11:19 GMT+05:30"
+          // JavaScript Date constructor can handle both formats
           activityDate = new Date(dateStr);
 
           // Fallback: if parsing fails, try without timezone
@@ -255,9 +265,13 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         const parts = contentText.split('\n').map(p => p.trim()).filter(Boolean);
         if (parts.length === 0) return;
 
-        // Extract date using the same regex as above
-        const dateRegex = /(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4},\s+\d{2}:\d{2}:\d{2}\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
-        const dateMatch = contentText.match(dateRegex);
+        // Extract date using the same regex as above (support both formats)
+        const dateRegex1 = /(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4},\s+\d{1,2}:\d{2}:\d{2}\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
+        const dateRegex2 = /([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4},\s+\d{1,2}:\d{2}:\d{2}\s+[AP]M\s+(?:GMT[+-]\d{2}:\d{2}|IST))/;
+
+        const dateMatch1 = contentText.match(dateRegex1);
+        const dateMatch2 = contentText.match(dateRegex2);
+        const dateMatch = dateMatch1 || dateMatch2;
 
         let activityDate = new Date();
         if (dateMatch) {

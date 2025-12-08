@@ -329,8 +329,8 @@ describe('htmlParser', () => {
       expect(result.data).toHaveLength(0);
     });
 
-    it('should correctly parse date format from actual Google Pay HTML', () => {
-      // This is the actual date format found in Google Pay My Activity exports
+    it('should correctly parse date format from actual Google Pay HTML (Format 2: Mon DD, YYYY with AM/PM)', () => {
+      // This is an older date format found in Google Pay My Activity exports
       const htmlContent = `
 <div class="outer-cell">
   <div class="content-cell">
@@ -348,6 +348,29 @@ describe('htmlParser', () => {
       expect(result.data![0].time.getFullYear()).toBe(2018);
       expect(result.data![0].time.getMonth()).toBe(9); // October is month 9 (0-indexed)
       expect(result.data![0].time.getDate()).toBe(9);
+    });
+
+    it('should correctly parse newer date format (Format 1: DD Mon YYYY, 24-hour)', () => {
+      // This is the newer date format found in Google Pay My Activity exports (2024-2025)
+      const htmlContent = `
+<div class="outer-cell">
+  <div class="content-cell">
+    Paid ₹105.00 to TEST MERCHANT using Bank Account XXXXXXXX5601<br>
+    8 Dec 2025, 20:11:19 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      expect(result.data![0].time).toBeInstanceOf(Date);
+      expect(result.data![0].time.getFullYear()).toBe(2025);
+      expect(result.data![0].time.getMonth()).toBe(11); // December is month 11 (0-indexed)
+      expect(result.data![0].time.getDate()).toBe(8);
+      expect(result.data![0].time.getHours()).toBe(20);
+      expect(result.data![0].time.getMinutes()).toBe(11);
     });
 
     it('should not default to current date when parsing real date formats', () => {
@@ -368,6 +391,142 @@ describe('htmlParser', () => {
       expect(result.data![0].time.getFullYear()).toBe(2024);
       expect(result.data![0].time.getMonth()).toBe(10); // November
       expect(result.data![0].time.getDate()).toBe(21);
+    });
+
+    it('should parse transactions from 2017 (older format)', () => {
+      const htmlContent = `
+<div class="outer-cell">
+  <div class="content-cell">
+    Paid ₹100.00 to OLD MERCHANT using Bank Account<br>
+    26 Dec 2017, 18:32:47 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      expect(result.data![0].time.getFullYear()).toBe(2017);
+      expect(result.data![0].time.getMonth()).toBe(11); // December
+      expect(result.data![0].time.getDate()).toBe(26);
+    });
+
+    it('should parse transactions from 2024 (newer format)', () => {
+      const htmlContent = `
+<div class="outer-cell">
+  <div class="content-cell">
+    Sent ₹1500.00 using Bank Account<br>
+    15 Aug 2024, 14:30:00 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      expect(result.data![0].time.getFullYear()).toBe(2024);
+      expect(result.data![0].time.getMonth()).toBe(7); // August
+      expect(result.data![0].time.getDate()).toBe(15);
+    });
+
+    it('should parse mixed date formats in the same file', () => {
+      const htmlContent = `
+<div class="outer-cell">
+  <div class="content-cell">
+    Paid ₹100.00<br>
+    26 Dec 2017, 18:32:47 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">
+    Sent ₹200.00<br>
+    Oct 9, 2018, 3:45:30 PM GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">
+    Received ₹300.00<br>
+    15 Aug 2024, 14:30:00 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">
+    Paid ₹400.00<br>
+    8 Dec 2025, 20:11:19 GMT+05:30<br>
+  </div>
+  <div class="content-cell">Completed</div>
+</div>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(4);
+
+      // Check all years are parsed correctly
+      expect(result.data![0].time.getFullYear()).toBe(2017);
+      expect(result.data![1].time.getFullYear()).toBe(2018);
+      expect(result.data![2].time.getFullYear()).toBe(2024);
+      expect(result.data![3].time.getFullYear()).toBe(2025);
+
+      // Check amounts
+      expect(result.data![0].amount?.value).toBe(100);
+      expect(result.data![1].amount?.value).toBe(200);
+      expect(result.data![2].amount?.value).toBe(300);
+      expect(result.data![3].amount?.value).toBe(400);
+    });
+
+    it('should parse all years from 2017 to 2025', () => {
+      const htmlContent = `
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹10.00<br>1 Jan 2017, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹20.00<br>1 Jan 2018, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹30.00<br>1 Jan 2019, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹40.00<br>1 Jan 2020, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹50.00<br>1 Jan 2021, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹60.00<br>1 Jan 2022, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹70.00<br>1 Jan 2023, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹80.00<br>1 Jan 2024, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>
+<div class="outer-cell">
+  <div class="content-cell">Paid ₹90.00<br>1 Jan 2025, 10:00:00 GMT+05:30</div>
+  <div class="content-cell">Completed</div>
+</div>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(9);
+
+      // Verify all years are present
+      const years = result.data!.map(d => d.time.getFullYear());
+      expect(years).toEqual([2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]);
     });
   });
 });
