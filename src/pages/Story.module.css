@@ -470,7 +470,22 @@
 
 .actionButton:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.actionButton.wrapped:hover {
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+  transform: translateY(-5px) scale(1.02);
+}
+
+.actionButton.categories:hover {
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+  transform: translateY(-5px) scale(1.02);
+}
+
+.actionButton.data:hover {
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+  transform: translateY(-5px) scale(1.02);
 }
 
 .actionButton:active {
@@ -478,32 +493,37 @@
 }
 
 .actionButton.wrapped {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: #3b82f6;
   color: white;
   border-color: transparent;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
 }
 
 .actionButton.categories {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: #10b981;
   color: white;
   border-color: transparent;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
 }
 
 .actionButton.data {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: #8b5cf6;
   color: white;
   border-color: transparent;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
 }
 
 .actionButton.upload {
-  background: rgba(255, 255, 255, 0.03);
-  color: #0ea5e9;
-  border: 2px solid rgba(14, 165, 233, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #60a5fa;
+  border: 2px solid rgba(96, 165, 250, 0.3);
+  box-shadow: none;
 }
 
 .actionButton.upload:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #0ea5e9;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #60a5fa;
+  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.2);
 }
 
 .buttonIcon {
