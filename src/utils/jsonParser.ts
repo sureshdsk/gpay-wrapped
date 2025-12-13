@@ -31,23 +31,14 @@ export function parseGroupExpensesJSON(jsonString: string): JSONParseResult<Grou
       return { success: true, data: [] };
     }
 
-    console.log('Group expenses JSON preview (first 200 chars):', jsonString.substring(0, 200));
-
     const cleaned = removeAntiXSSIPrefix(jsonString);
-    console.log('After removing XSSI prefix (first 200 chars):', cleaned.substring(0, 200));
 
     const parsed = JSON.parse(cleaned);
-    console.log('Parsed group expenses JSON structure:', {
-      isArray: Array.isArray(parsed),
-      keys: typeof parsed === 'object' ? Object.keys(parsed) : 'not an object',
-      firstItem: Array.isArray(parsed) ? parsed[0] : null,
-    });
 
     // Handle different JSON structures - support both camelCase and snake_case
     let expenses = Array.isArray(parsed)
       ? parsed
       : (parsed.Group_expenses || parsed.groupExpenses || []);
-    console.log(`Found ${expenses.length} group expenses in JSON`);
 
     const transformedExpenses = expenses
       .map((expense: any, index: number) => {
@@ -82,7 +73,6 @@ export function parseGroupExpensesJSON(jsonString: string): JSONParseResult<Grou
       })
       .filter((item: GroupExpense | null): item is GroupExpense => item !== null);
 
-    console.log(`Transformed ${expenses.length} expenses to ${transformedExpenses.length} valid items`);
     return { success: true, data: transformedExpenses };
   } catch (error) {
     console.error('Group expenses JSON parse error:', error);
@@ -103,23 +93,14 @@ export function parseVoucherRewardsJSON(jsonString: string): JSONParseResult<Vou
       return { success: true, data: [] };
     }
 
-    console.log('Voucher rewards JSON preview (first 200 chars):', jsonString.substring(0, 200));
-
     const cleaned = removeAntiXSSIPrefix(jsonString);
-    console.log('After removing XSSI prefix (first 200 chars):', cleaned.substring(0, 200));
 
     const parsed = JSON.parse(cleaned);
-    console.log('Parsed voucher JSON structure:', {
-      isArray: Array.isArray(parsed),
-      keys: typeof parsed === 'object' ? Object.keys(parsed) : 'not an object',
-      firstItem: Array.isArray(parsed) ? parsed[0] : null,
-    });
 
     // Handle different JSON structures - support multiple field names
     let vouchers = Array.isArray(parsed)
       ? parsed
       : (parsed.couponRewardExportRecord || parsed.vouchers || []);
-    console.log(`Found ${vouchers.length} vouchers in JSON`);
 
     const transformedVouchers = vouchers
       .map((voucher: any, index: number) => {
@@ -145,7 +126,6 @@ export function parseVoucherRewardsJSON(jsonString: string): JSONParseResult<Vou
       })
       .filter((item: Voucher | null): item is Voucher => item !== null);
 
-    console.log(`Transformed ${vouchers.length} vouchers to ${transformedVouchers.length} valid items`);
     return { success: true, data: transformedVouchers };
   } catch (error) {
     console.error('Voucher JSON parse error:', error);

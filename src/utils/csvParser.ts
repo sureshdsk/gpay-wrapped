@@ -23,19 +23,10 @@ export function parseCSV<T>(
       return { success: true, data: [] };
     }
 
-    console.log('CSV string preview (first 200 chars):', csvString.substring(0, 200));
-
     const result = Papa.parse(csvString, {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: false, // Keep as strings for custom parsing
-    });
-
-    console.log('Papa parse result:', {
-      rowCount: result.data.length,
-      errors: result.errors,
-      meta: result.meta,
-      firstRow: result.data[0],
     });
 
     if (result.errors.length > 0) {
@@ -53,8 +44,6 @@ export function parseCSV<T>(
     const transformedData = result.data
       .map(transform)
       .filter((item): item is T => item !== null);
-
-    console.log(`Transformed ${result.data.length} rows to ${transformedData.length} items`);
 
     return { success: true, data: transformedData };
   } catch (error) {
@@ -76,12 +65,6 @@ export function parseTransactionsCSV(csvString: string) {
   const result = parseCSV(csvString, (row) => {
     rowsProcessed++;
     try {
-      // Log first row to see structure
-      if (rowsProcessed === 1) {
-        console.log('First transaction row keys:', Object.keys(row));
-        console.log('First transaction row:', row);
-      }
-
       // Skip invalid rows - use exact column names from CSV
       const transactionId = row['Transaction ID'] || row.ID;
       if (!row.Time || !transactionId) {
@@ -113,7 +96,6 @@ export function parseTransactionsCSV(csvString: string) {
     }
   });
 
-  console.log(`Transaction CSV: processed ${rowsProcessed} rows, skipped ${rowsSkipped}`);
   return result;
 }
 

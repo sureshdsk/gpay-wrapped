@@ -83,20 +83,14 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
       return { success: true, data: [] };
     }
 
-    console.log('My Activity HTML length:', htmlString.length);
-    console.log('My Activity preview (first 500 chars):', htmlString.substring(0, 500));
-
     // Parse HTML using DOMParser
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-
-    console.log('HTML parsed, document title:', doc.title);
 
     const activities: ActivityRecord[] = [];
 
     // Find all outer-cell divs which contain individual activity records
     const outerCells = doc.querySelectorAll('.outer-cell');
-    console.log(`Found ${outerCells.length} activity records`);
 
     let failedCount = 0;
 
@@ -138,9 +132,6 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         if (isFailed) {
           failedCount++;
           // Skip failed transactions - don't add them to activities
-          if (failedCount <= 10) {
-            console.log(`Skipping failed activity ${index}:`, fullCellText.substring(0, 250));
-          }
           return;
         }
 
@@ -228,19 +219,6 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
             category: classifyTransaction(title + ' ' + contentText, amountValue) as TransactionCategory,
           });
         }
-
-        // Log first few for debugging
-        if (index < 3) {
-          console.log(`Activity ${index}:`, {
-            title,
-            dateStr,
-            product,
-            transactionType,
-            amount,
-            recipient,
-            sender,
-          });
-        }
       } catch (error) {
         console.error(`Error parsing activity ${index}:`, error);
       }
@@ -306,21 +284,6 @@ export function parseMyActivityHTML(htmlString: string): HTMLParseResult {
         // Ignore errors in year counting
       }
     });
-
-    console.log(`Successfully parsed ${activities.length} activities from ${outerCells.length} cells (${failedCount} failed transactions skipped)`);
-
-    // Show year breakdown
-    console.log('\n📊 YEAR BREAKDOWN (from HTML):');
-    Array.from(yearBreakdown.entries())
-      .sort((a, b) => a[0] - b[0])
-      .forEach(([year, stats]) => {
-        console.log(`  ${year}: ${stats.total} total (${stats.successful} successful, ${stats.failed} failed)`);
-      });
-    console.log('');
-
-    // Detailed count breakdown
-    console.log(`Activity breakdown: ${outerCells.length} total cells found, ${failedCount} failed/cancelled, ${activities.length} successful added`);
-    console.log(`Math check: ${outerCells.length} - ${failedCount} = ${outerCells.length - failedCount} (expected successful activities)`);
 
     // Verify if expected matches actual
     if (activities.length !== outerCells.length - failedCount) {

@@ -52,7 +52,9 @@
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-1JEHR3W4RT', {
-      'send_page_view': false // Disable automatic page views, we'll track manually
+      'send_page_view': false, // Disable automatic page views, we'll track manually
+      'cookie_flags': 'SameSite=None;Secure', // Better cookie handling
+      'anonymize_ip': true // Privacy: anonymize IP addresses
     });
   </script>
 </head>

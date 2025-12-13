@@ -5,7 +5,6 @@ import ThemeSwitcher from '../components/ThemeSwitcher';
 import styles from './Landing.module.css';
 
 export default function Landing() {
-  console.log('Landing page rendering');
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 

@@ -32,9 +32,7 @@ class BackgroundMusicManager {
     if (this.audio && this.audio.paused) {
       try {
         await this.audio.play();
-        console.log('Background music started');
       } catch (err) {
-        console.log('Music autoplay blocked, will retry on user interaction');
         // Set up one-time listener for user interaction
         const startOnInteraction = () => {
           if (this.audio && this.audio.paused) {

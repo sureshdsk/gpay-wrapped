@@ -25,8 +25,9 @@ export function filterTransactionsByYear(
   const failedCount = transactions.filter(t => isFailedTransaction(t.status)).length;
   const successfulTransactions = transactions.filter(t => !isFailedTransaction(t.status));
 
+  console.log(`Filtering transactions - ${failedCount} failed excluded`);
+
   if (year === 'all') {
-    console.log(`Transactions: ${transactions.length} total, ${failedCount} failed, ${successfulTransactions.length} successful (all years)`);
     return successfulTransactions;
   }
 
@@ -35,8 +36,6 @@ export function filterTransactionsByYear(
     const transactionYear = t.time.getFullYear();
     return transactionYear === parseInt(year);
   });
-
-  console.log(`Transactions: ${transactions.length} total, ${failedCount} failed, ${successfulTransactions.length} successful, ${yearFiltered.length} in ${year}`);
 
   return yearFiltered;
 }
@@ -55,7 +54,6 @@ export function filterGroupExpensesByYear(
     return expenseYear === parseInt(year);
   });
 
-  console.log(`Group Expenses: ${expenses.length} total, ${filtered.length} in ${year}`);
   return filtered;
 }
 
@@ -73,7 +71,6 @@ export function filterCashbackRewardsByYear(
     return rewardYear === parseInt(year);
   });
 
-  console.log(`Cashback Rewards: ${rewards.length} total, ${filtered.length} in ${year}`);
   return filtered;
 }
 
@@ -92,7 +89,6 @@ export function filterVouchersByYear(
     return voucherYear === parseInt(year);
   });
 
-  console.log(`Vouchers: ${vouchers.length} total, ${filtered.length} expiring in ${year}`);
   return filtered;
 }
 
@@ -138,8 +134,9 @@ export function filterActivitiesByYear(
   const failedActivities = activities.filter(a => isFailedActivity(a));
   const successfulActivities = activities.filter(a => !isFailedActivity(a));
 
+  console.log(`Filtering activities - ${failedActivities.length} failed excluded`);
+
   if (year === 'all') {
-    console.log(`Activities: ${activities.length} total, ${failedActivities.length} failed, ${successfulActivities.length} successful (all years)`);
     return successfulActivities;
   }
 
@@ -148,29 +145,6 @@ export function filterActivitiesByYear(
     const activityYear = activity.time.getFullYear();
     return activityYear === parseInt(year);
   });
-
-  // Get year distribution for debugging
-  const yearCounts = new Map<number, number>();
-  successfulActivities.forEach(a => {
-    const yr = a.time.getFullYear();
-    yearCounts.set(yr, (yearCounts.get(yr) || 0) + 1);
-  });
-
-  console.log(`Activities: ${activities.length} total, ${failedActivities.length} failed, ${successfulActivities.length} successful, ${yearFiltered.length} in ${year}`);
-  console.log('Activity year distribution:', Array.from(yearCounts.entries()).sort((a, b) => a[0] - b[0]).map(([yr, count]) => `${yr}: ${count}`).join(', '));
-
-  // Show sample of first and last few activities with dates
-  if (successfulActivities.length > 0) {
-    const samples = [
-      ...successfulActivities.slice(0, 3),
-      ...successfulActivities.slice(-3)
-    ];
-    console.log('Sample activity dates:', samples.map(a => ({
-      title: a.title.substring(0, 30),
-      date: a.time.toISOString().split('T')[0],
-      year: a.time.getFullYear()
-    })));
-  }
 
   return yearFiltered;
 }

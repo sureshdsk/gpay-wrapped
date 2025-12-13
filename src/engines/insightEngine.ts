@@ -110,21 +110,6 @@ export function calculateAllInsights(
   const roundNumberInsight = calculateRoundNumberObsessionInsight(filteredData);
   if (roundNumberInsight) insights.push(roundNumberInsight);
 
-  const funnyInsightCount = [
-    paymentStreakInsight,
-    midnightShopperInsight,
-    smallestPaymentInsight,
-    roundNumberInsight
-  ].filter(Boolean).length;
-
-  console.log(
-    `Generated ${insights.length} insights (including ${
-      [moneyFlowInsight, transactionPartnerInsight, peakActivityInsight, bulkPaymentInsight, categoryInsight].filter(
-        Boolean
-      ).length
-    } activity/category-based, ${funnyInsightCount} funny insights)`
-  );
-
   // Return max 12 insights (increased to accommodate funny ones)
   return insights.slice(0, 12);
 }
