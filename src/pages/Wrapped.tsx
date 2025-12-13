@@ -44,6 +44,7 @@ export default function Wrapped() {
   const [isSharing, setIsSharing] = useState(false);
   const [bgStyle, setBgStyle] = useState<'blobs' | 'mesh' | 'particles'>('blobs');
   const slideRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Generate slides from insights and data
   const slides: SlideData[] = useMemo(() => {
@@ -389,6 +390,42 @@ export default function Wrapped() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nextSlide, prevSlide, navigate]);
 
+  // Auto-play music on component mount
+  useEffect(() => {
+    const playMusic = () => {
+      if (audioRef.current) {
+        audioRef.current.volume = 0.3; // Set volume to 30%
+        audioRef.current.play()
+          .then(() => console.log('Music started playing'))
+          .catch(() => {
+            console.log('Autoplay blocked, trying on user interaction');
+            // Try to play on first user interaction
+            const handleInteraction = () => {
+              if (audioRef.current) {
+                audioRef.current.play()
+                  .then(() => console.log('Music started after interaction'))
+                  .catch(e => console.log('Could not play music:', e));
+              }
+              document.removeEventListener('click', handleInteraction);
+              document.removeEventListener('keydown', handleInteraction);
+            };
+            document.addEventListener('click', handleInteraction);
+            document.addEventListener('keydown', handleInteraction);
+          });
+      }
+    };
+
+    // Try to play music after a short delay
+    setTimeout(playMusic, 500);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+
   // Entrance animation
   useEffect(() => {
     if (slideRef.current) {
@@ -490,6 +527,7 @@ export default function Wrapped() {
       {/* Header */}
       <div className={styles.header}>
         <h1 className={styles.headerTitle}>GPay Wrapped {selectedYear === 'all' ? 'All Time' : selectedYear}</h1>
+        
         {/* Background Style Selector */}
         <div className={styles.bgSelector}>
           <button 
@@ -736,6 +774,15 @@ export default function Wrapped() {
           Exit
         </button>
       </div>
+      
+      {/* Hidden Audio Element - Plays automatically */}
+      <audio
+        ref={audioRef}
+        src="/background-music.mp3"
+        loop
+        autoPlay
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }

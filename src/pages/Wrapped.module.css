@@ -28,6 +28,122 @@
   position: relative;
 }
 
+/* Music Controls */
+.musicControls {
+  @apply flex items-center gap-2;
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.musicBtn {
+  @apply w-8 h-8 rounded-lg flex items-center justify-center text-base
+         bg-white/10 border border-white/20
+         transition-all duration-200 cursor-pointer;
+}
+
+.musicBtn:hover {
+  @apply bg-white/20 scale-110;
+}
+
+.musicBtn.playing {
+  animation: musicPulse 2s ease-in-out infinite;
+  @apply bg-white/20;
+}
+
+@keyframes musicPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+}
+
+/* Equalizer Animation */
+.equalizer {
+  @apply flex items-end gap-1 h-5 ml-1;
+}
+
+.bar {
+  @apply w-1 bg-white/60;
+  border-radius: 2px;
+  animation: equalizerDance 0.8s ease-in-out infinite;
+}
+
+.bar:nth-child(1) {
+  animation-delay: 0s;
+  height: 8px;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.1s;
+  height: 12px;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.2s;
+  height: 10px;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.3s;
+  height: 14px;
+}
+
+@keyframes equalizerDance {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
+
+.volumeSlider {
+  @apply w-20;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.volumeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.volumeSlider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
 /* Background Style Selector */
 .bgSelector {
   @apply flex gap-1;
