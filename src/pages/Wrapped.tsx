@@ -427,8 +427,6 @@ export default function Wrapped() {
     
     setIsSharing(true);
     try {
-      const currentSlideData = slides[currentSlide];
-      
       // Disable animations for export by adding a class
       slideRef.current.classList.add(styles.exportMode);
 
