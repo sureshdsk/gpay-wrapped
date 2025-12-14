@@ -60,8 +60,8 @@ export default function Processing() {
       setStage('complete');
       await sleep(500);
 
-      // Navigate to story page
-      navigate('/story');
+      // Navigate to insights page
+      navigate('/insights');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       setStage('error');

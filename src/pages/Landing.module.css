@@ -1,18 +1,50 @@
 .landing {
-  @apply min-h-screen flex flex-col bg-gradient-to-br from-primary-500 to-secondary-500 p-5;
+  @apply min-h-screen flex flex-col p-6;
+  background-color: var(--color-background);
+  position: relative;
+}
+
+.themeSwitcherContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+}
+
+.githubButton {
+  @apply flex items-center gap-2.5 px-5 py-3
+         text-white rounded-xl
+         text-sm font-semibold
+         transition-all duration-200
+         hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
+  background-color: var(--color-primaryDark);
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.githubButton:hover {
+  background-color: var(--color-primary);
+}
+
+.githubButton svg {
+  flex-shrink: 0;
 }
 
 .header {
-  @apply text-center py-10 px-5 text-white;
+  @apply text-center py-12 px-5;
 }
 
 .title {
-  @apply text-5xl font-extrabold m-0 mb-3;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  @apply text-5xl font-bold m-0 mb-4 tracking-tight;
+  color: var(--color-text);
 }
 
 .subtitle {
-  @apply text-xl font-normal m-0 opacity-95;
+  @apply text-lg font-normal m-0;
+  color: var(--color-textSecondary);
 }
 
 .main {
@@ -20,12 +52,18 @@
 }
 
 .footer {
-  @apply py-8 px-5 flex justify-center;
+  @apply py-12 px-5 flex flex-col items-center gap-8;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .privacyBadge {
-  @apply flex items-center gap-4 bg-white/15 backdrop-blur-md
-         px-6 py-4 rounded-xl border border-white/20 text-white max-w-md;
+  @apply flex items-center gap-4
+         px-6 py-5 rounded-2xl max-w-lg shadow-sm;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-surfaceBorder);
+  color: var(--color-textSecondary);
 }
 
 .badgeIcon {
@@ -37,11 +75,95 @@
 }
 
 .badgeTitle {
-  @apply block text-base font-semibold mb-1;
+  @apply block text-base font-bold mb-1;
+  color: var(--color-text);
 }
 
 .badgeText {
-  @apply m-0 text-sm opacity-90;
+  @apply m-0 text-sm;
+  color: var(--color-textSecondary);
+}
+
+.howToSection {
+  @apply rounded-2xl px-6 py-5 max-w-2xl shadow-sm;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-surfaceBorder);
+}
+
+.howToTitle {
+  @apply m-0 mb-4 text-lg font-bold;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.howToSteps {
+  @apply m-0 pl-5 space-y-2.5;
+  list-style: decimal;
+}
+
+.howToStep {
+  @apply text-sm leading-relaxed;
+  color: var(--color-textSecondary);
+  padding-left: 0.5rem;
+}
+
+.howToLink {
+  @apply font-semibold transition-colors duration-200 underline;
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primaryLight);
+}
+
+.howToLink:hover {
+  color: var(--color-primaryHover);
+  text-decoration-color: var(--color-primary);
+}
+
+.disclaimers {
+  @apply flex flex-col items-center gap-3 max-w-2xl px-4;
+}
+
+.disclaimer {
+  @apply m-0 text-sm flex items-center gap-2.5;
+  color: var(--color-textMuted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.disclaimerIcon {
+  @apply text-base;
+  flex-shrink: 0;
+}
+
+.attribution {
+  @apply flex flex-col items-center pt-6 w-full max-w-2xl;
+  border-top: 2px solid var(--color-surfaceBorder);
+}
+
+.builtBy {
+  @apply m-0 text-base font-medium;
+  color: var(--color-textSecondary);
+}
+
+.authorLink {
+  @apply font-bold transition-colors duration-200 no-underline hover:underline decoration-2;
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primaryLight);
+}
+
+.authorLink:hover {
+  color: var(--color-primaryHover);
+  text-decoration-color: var(--color-primary);
+}
+
+.aboutLink {
+  @apply font-bold transition-colors duration-200 no-underline hover:underline decoration-2;
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primaryLight);
+}
+
+.aboutLink:hover {
+  color: var(--color-primaryHover);
+  text-decoration-color: var(--color-primary);
 }
 
 @media (max-width: 768px) {
@@ -50,14 +172,83 @@
   }
 
   .subtitle {
-    @apply text-lg;
+    @apply text-base;
+  }
+
+  .themeSwitcherContainer {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .githubButton {
+    @apply text-xs px-3 py-2 gap-2;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  .githubButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .footer {
+    @apply py-8 gap-6;
   }
 
   .privacyBadge {
-    @apply flex-col text-center;
+    @apply flex-col text-center gap-3 px-5 py-4;
+  }
+
+  .badgeIcon {
+    @apply text-2xl;
   }
 
   .badgeContent {
     @apply text-center;
+  }
+
+  .badgeTitle {
+    @apply text-sm;
+  }
+
+  .badgeText {
+    @apply text-xs;
+  }
+
+  .howToSection {
+    @apply px-5 py-4;
+  }
+
+  .howToTitle {
+    @apply text-base mb-3;
+  }
+
+  .howToSteps {
+    @apply pl-4 space-y-2;
+  }
+
+  .howToStep {
+    @apply text-xs;
+    padding-left: 0.25rem;
+  }
+
+  .disclaimers {
+    @apply gap-2.5;
+  }
+
+  .disclaimer {
+    @apply text-xs;
+  }
+
+  .disclaimerIcon {
+    @apply text-sm;
+  }
+
+  .attribution {
+    @apply pt-4;
+  }
+
+  .builtBy {
+    @apply text-sm;
   }
 }

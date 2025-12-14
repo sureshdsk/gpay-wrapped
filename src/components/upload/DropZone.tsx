@@ -109,16 +109,6 @@ export default function DropZone({ onUpload, disabled = false }: DropZoneProps) 
           ⚠️ {error}
         </div>
       )}
-
-      <div className={styles.helpText}>
-        <h4 className={styles.helpTitle}>How to get your data:</h4>
-        <ol className={styles.helpList}>
-          <li>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener noreferrer">Google Takeout</a></li>
-          <li>Select only "Google Pay"</li>
-          <li>Download your data as ZIP</li>
-          <li>Upload it here - 100% offline processing!</li>
-        </ol>
-      </div>
     </div>
   );
 }

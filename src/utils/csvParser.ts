@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { classifyTransaction } from './multi-layer-classifier';
 
 export interface CSVParseResult<T> {
   success: boolean;
@@ -18,6 +19,7 @@ export function parseCSV<T>(
 ): CSVParseResult<T> {
   try {
     if (!csvString || csvString.trim().length === 0) {
+      console.warn('Empty CSV string provided');
       return { success: true, data: [] };
     }
 
@@ -29,6 +31,7 @@ export function parseCSV<T>(
 
     if (result.errors.length > 0) {
       const errorMessages = result.errors.map(e => e.message).join(', ');
+      console.error('CSV parsing errors:', result.errors);
       return { success: false, error: `CSV parsing error: ${errorMessages}` };
     }
 
@@ -44,6 +47,7 @@ export function parseCSV<T>(
 
     return { success: true, data: transformedData };
   } catch (error) {
+    console.error('CSV parsing exception:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown CSV parsing error',
@@ -55,26 +59,44 @@ export function parseCSV<T>(
  * Parse transaction CSV with custom transformation
  */
 export function parseTransactionsCSV(csvString: string) {
-  return parseCSV(csvString, (row) => {
+  let rowsProcessed = 0;
+  let rowsSkipped = 0;
+
+  const result = parseCSV(csvString, (row) => {
+    rowsProcessed++;
     try {
-      // Skip invalid rows
-      if (!row.Time || !row.ID) {
+      // Skip invalid rows - use exact column names from CSV
+      const transactionId = row['Transaction ID'] || row.ID;
+      if (!row.Time || !transactionId) {
+        rowsSkipped++;
+        if (rowsSkipped <= 3) {
+          console.warn(`Skipping row ${rowsProcessed} - missing Time or Transaction ID:`, row);
+        }
         return null;
       }
 
+      const description = row.Description || '';
+      const amountStr = row.Amount || '0';
+      // Extract numeric value for classification (remove currency symbols and commas)
+      const amountValue = parseFloat(amountStr.replace(/[₹$,]/g, '')) || 0;
+
       return {
         time: new Date(row.Time),
-        id: row.ID,
-        description: row.Description || '',
+        id: transactionId,
+        description,
         product: row.Product || '',
-        method: row.Method || '',
+        method: row['Payment method'] || row.Method || '',
         status: row.Status || '',
-        amount: row.Amount || '', // Will be parsed by currencyUtils
+        amount: amountStr, // Will be parsed by currencyUtils
+        category: classifyTransaction(description, amountValue),
       };
     } catch (error) {
+      console.error(`Error transforming row ${rowsProcessed}:`, error, row);
       return null;
     }
   });
+
+  return result;
 }
 
 /**
@@ -88,11 +110,15 @@ export function parseCashbackRewardsCSV(csvString: string) {
         return null;
       }
 
+      // Column is called "Reward amount" not "Amount"
+      const amount = row['Reward amount'] || row.Amount || '0';
+      const description = row['Rewards description'] || row.Description || '';
+
       return {
         date: new Date(row.Date),
         currency: row.Currency || 'INR',
-        amount: row.Amount || '0',
-        description: row.Description || '',
+        amount: amount,
+        description: description,
       };
     } catch (error) {
       return null;

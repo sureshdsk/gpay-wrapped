@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { DataStore, RawExtractedData, YearFilter } from '../types/storage.types';
-import { ParsedData, Transaction, GroupExpense, CashbackReward, Voucher } from '../types/data.types';
+import { ParsedData, Transaction, GroupExpense, CashbackReward, Voucher, ActivityRecord } from '../types/data.types';
 import { Insight } from '../types/insight.types';
 import { parseTransactionsCSV, parseCashbackRewardsCSV } from '../utils/csvParser';
 import { parseGroupExpensesJSON, parseVoucherRewardsJSON } from '../utils/jsonParser';
 import { parseCurrency } from '../utils/currencyUtils';
+import { calculateAllInsights } from '../engines/insightEngine';
+import { parseMyActivityHTML } from '../utils/htmlParser';
 
 /**
  * Global data store using Zustand
@@ -52,6 +54,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   parseRawData: () => {
     const { rawData } = get();
     if (!rawData) {
+      console.warn('No raw data available for parsing');
       return;
     }
 
@@ -66,7 +69,11 @@ export const useDataStore = create<DataStore>((set, get) => ({
             ...t,
             amount: typeof t.amount === 'string' ? parseCurrency(t.amount) : t.amount,
           })) as Transaction[];
+        } else {
+          console.warn('Transaction parsing failed or returned no data:', result.error);
         }
+      } else {
+        console.warn('No transactions data in rawData');
       }
 
       // Parse group expenses JSON
@@ -100,14 +107,31 @@ export const useDataStore = create<DataStore>((set, get) => ({
         }
       }
 
+      // Parse My Activity HTML
+      let activities: ActivityRecord[] = [];
+      if (rawData.myActivity) {
+        const result = parseMyActivityHTML(rawData.myActivity);
+        if (result.success && result.data) {
+          activities = result.data;
+        } else {
+          console.warn('My Activity parsing failed or returned no data:', result.error);
+        }
+      } else {
+        console.warn('No My Activity data in rawData');
+      }
+
       const parsedData: ParsedData = {
         transactions,
         groupExpenses,
         cashbackRewards,
         voucherRewards,
+        activities,
       };
 
       set({ parsedData, error: null });
+
+      // Automatically calculate insights after parsing
+      get().recalculateInsights(get().selectedYear);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to parse data',
@@ -117,41 +141,25 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
   /**
    * Recalculate insights based on selected year
-   * This will be implemented when we build the insight engine
    */
   recalculateInsights: (year: YearFilter) => {
     const { parsedData } = get();
+
     if (!parsedData) {
+      console.warn('No parsed data available for insight calculation');
       return;
     }
 
-    // TODO: Implement insight calculation engine
-    // For now, just log that we would recalculate
-    console.log(`Recalculating insights for year: ${year}`);
-
-    // Filter data by year
-    const filteredData = filterDataByYear(parsedData, year);
-    console.log('Filtered data:', filteredData);
-
-    // Insights will be calculated in Phase 2
-    set({ insights: [] });
+    try {
+      // Calculate all insights using the insight engine
+      const insights = calculateAllInsights(parsedData, year);
+      set({ insights, error: null });
+    } catch (error) {
+      console.error('Error calculating insights:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to calculate insights',
+        insights: [],
+      });
+    }
   },
 }));
-
-/**
- * Helper function to filter data by year
- */
-function filterDataByYear(data: ParsedData, year: YearFilter): ParsedData {
-  if (year === 'all') {
-    return data;
-  }
-
-  const targetYear = parseInt(year);
-
-  return {
-    transactions: data.transactions.filter(t => t.time.getFullYear() === targetYear),
-    groupExpenses: data.groupExpenses.filter(g => g.creationTime.getFullYear() === targetYear),
-    cashbackRewards: data.cashbackRewards.filter(r => r.date.getFullYear() === targetYear),
-    voucherRewards: data.voucherRewards, // Vouchers are not filtered by year
-  };
-}

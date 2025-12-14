@@ -1,8 +1,11 @@
 import { Currency } from '../types/data.types';
 
 /**
- * Parse currency strings like "INR 1,014.80" or "USD 25.00"
- * @param currencyString - String in format "CURRENCY VALUE"
+ * Parse currency strings in various formats:
+ * - "INR 1,014.80" or "USD 25.00" (code + space + value)
+ * - "₹1,014.80" or "$25.00" (symbol + value)
+ * - "₹ 1,014.80" or "$ 25.00" (symbol + space + value)
+ * @param currencyString - Currency string in various formats
  * @returns Currency object with value and currency type
  */
 export function parseCurrency(currencyString: string): Currency {
@@ -13,27 +16,49 @@ export function parseCurrency(currencyString: string): Currency {
 
     const trimmed = currencyString.trim();
 
-    // Split by space to separate currency code and value
-    const parts = trimmed.split(' ');
+    // Detect currency type and extract value
+    let currency: 'INR' | 'USD' = 'INR';
+    let valueString = trimmed;
 
-    if (parts.length < 2) {
-      return { value: 0, currency: 'INR' };
+    // Handle ₹ symbol (INR)
+    if (trimmed.startsWith('₹')) {
+      currency = 'INR';
+      valueString = trimmed.slice(1).trim();
     }
-
-    const currency = parts[0] as 'INR' | 'USD';
-    const valueString = parts.slice(1).join(' '); // Handle cases with multiple spaces
+    // Handle $ symbol (USD)
+    else if (trimmed.startsWith('$')) {
+      currency = 'USD';
+      valueString = trimmed.slice(1).trim();
+    }
+    // Handle "INR" or "USD" prefix with space
+    else if (trimmed.toUpperCase().startsWith('INR')) {
+      currency = 'INR';
+      valueString = trimmed.slice(3).trim();
+    }
+    else if (trimmed.toUpperCase().startsWith('USD')) {
+      currency = 'USD';
+      valueString = trimmed.slice(3).trim();
+    }
+    // Handle space-separated format (legacy)
+    else {
+      const parts = trimmed.split(' ');
+      if (parts.length >= 2) {
+        const currencyCode = parts[0].toUpperCase();
+        if (currencyCode === 'USD') {
+          currency = 'USD';
+        }
+        valueString = parts.slice(1).join(' ');
+      }
+    }
 
     // Remove commas and parse as float
     const value = parseFloat(valueString.replace(/,/g, ''));
 
     if (isNaN(value)) {
-      return { value: 0, currency: currency || 'INR' };
+      return { value: 0, currency };
     }
 
-    return {
-      value,
-      currency: currency === 'USD' ? 'USD' : 'INR',
-    };
+    return { value, currency };
   } catch (error) {
     return { value: 0, currency: 'INR' };
   }
