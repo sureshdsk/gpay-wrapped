@@ -65,6 +65,13 @@ export default function Landing() {
             <li className={styles.howToStep}>Export as HTML file</li>
           </ol>
 
+          <h4>Paytm:</h4>
+          <ol className={styles.howToSteps}>
+            <li className={styles.howToStep}>Open Paytm app → Passbook</li>
+            <li className={styles.howToStep}>Tap on "Download Statement"</li>
+            <li className={styles.howToStep}>Select date range and export as XLSX file</li>
+          </ol>
+
           <p className={styles.multiFileNote}>
             💡 You can upload files from multiple apps at once!
           </p>

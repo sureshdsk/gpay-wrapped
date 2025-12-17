@@ -11,14 +11,14 @@ export default function DropZone({ onUpload, disabled = false }: DropZoneProps) 
   const [error, setError] = useState<string | null>(null);
 
   const validateFile = (file: File): boolean => {
-    // Accept ZIP, HTML, PDF files
-    const validExtensions = ['.zip', '.html', '.htm', '.pdf'];
+    // Accept ZIP, HTML, PDF, XLSX files
+    const validExtensions = ['.zip', '.html', '.htm', '.pdf', '.xlsx'];
     const hasValidExtension = validExtensions.some(ext =>
       file.name.toLowerCase().endsWith(ext)
     );
 
     if (!hasValidExtension) {
-      setError('Please upload a ZIP, HTML, or PDF file from your UPI app');
+      setError('Please upload a ZIP, HTML, PDF, or XLSX file from your UPI app');
       return false;
     }
 
@@ -88,7 +88,7 @@ export default function DropZone({ onUpload, disabled = false }: DropZoneProps) 
         <input
           type="file"
           id="file-upload"
-          accept=".zip,.html,.htm,.pdf"
+          accept=".zip,.html,.htm,.pdf,.xlsx"
           multiple
           onChange={handleFileInput}
           disabled={disabled}
@@ -101,7 +101,7 @@ export default function DropZone({ onUpload, disabled = false }: DropZoneProps) 
           <p className={styles.description}>
             Drag and drop your export files here
             <br />
-            <small>Google Pay (ZIP), BHIM (HTML), PhonePe (PDF)</small>
+            <small>Google Pay (ZIP), BHIM (HTML), Paytm (XLSX), PhonePe (PDF)</small>
           </p>
           <p className={styles.or}>or</p>
           <button

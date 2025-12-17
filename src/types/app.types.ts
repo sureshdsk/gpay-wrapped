@@ -33,6 +33,7 @@ export enum FileFormat {
   PDF = 'pdf',
   CSV = 'csv',
   JSON = 'json',
+  XLSX = 'xlsx',
 }
 
 /**
@@ -87,7 +88,7 @@ export const APP_METADATA: Record<UpiAppId, AppMetadata> = {
     name: 'paytm',
     displayName: 'PayTM',
     icon: '🔷',
-    supportedFormats: [FileFormat.ZIP, FileFormat.PDF],
+    supportedFormats: [FileFormat.ZIP, FileFormat.PDF, FileFormat.XLSX],
     color: '#00BAF2',
   },
 };

@@ -4,8 +4,8 @@ import type { UpiAppId } from '../types/app.types';
 import type { AppAdapter } from '../adapters/base/AppAdapter';
 import { GooglePayAdapter } from '../adapters/googlepay/GooglePayAdapter';
 import { BhimAdapter } from '../adapters/bhim/BhimAdapter';
+import { PaytmAdapter } from '../adapters/paytm/PaytmAdapter';
 // import { PhonePeAdapter } from '../adapters/phonepe/PhonePeAdapter'; // Future
-// import { PaytmAdapter } from '../adapters/paytm/PaytmAdapter'; // Future
 
 /**
  * Detection result with confidence scoring
@@ -26,8 +26,8 @@ export class AppDetector {
     // Register all adapters
     this.adapters.push(new GooglePayAdapter());
     this.adapters.push(new BhimAdapter());
+    this.adapters.push(new PaytmAdapter());
     // this.adapters.push(new PhonePeAdapter()); // Future
-    // this.adapters.push(new PaytmAdapter()); // Future
   }
 
   /**

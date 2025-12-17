@@ -22,6 +22,7 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.10.1",
     "react-swipeable": "^7.0.2",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/papaparse": "^5.5.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/xlsx": "^0.0.35",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/ui": "^4.0.15",
     "autoprefixer": "^10.4.22",
