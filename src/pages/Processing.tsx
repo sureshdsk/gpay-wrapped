@@ -13,6 +13,8 @@ export default function Processing() {
   const [stage, setStage] = useState<ProcessingStage>('detecting');
   const [error, setError] = useState<string | null>(null);
   const [pendingPasswordFile, setPendingPasswordFile] = useState<File | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set());
 
   const { addAppData } = useDataStore();
 
@@ -38,12 +40,23 @@ export default function Processing() {
       await sleep(300);
 
       for (const file of files) {
+        // Skip already processed files
+        if (processedFiles.has(file.name)) {
+          continue;
+        }
+
+        // Skip file that's currently pending password (prevent double prompt)
+        if (pendingPasswordFile && pendingPasswordFile.name === file.name) {
+          continue;
+        }
+
         const result = await multiAppManager.processFile(file);
 
         if (!result.success) {
           // Check if password required
           if (result.error?.includes('password')) {
             setPendingPasswordFile(file);
+            setPasswordError(null); // Clear any previous password errors
             return; // Wait for password input
           }
 
@@ -60,6 +73,9 @@ export default function Processing() {
           // Add app data to store (this also triggers parsing)
           await addAppData(result.appId, result.rawData);
         }
+
+        // Mark file as processed
+        setProcessedFiles(prev => new Set(prev).add(file.name));
       }
 
       // Stage 3: Parsing (auto-triggered by addAppData)
@@ -85,10 +101,18 @@ export default function Processing() {
   const handlePasswordSubmit = async (password: string) => {
     if (!pendingPasswordFile) return;
 
+    setPasswordError(null); // Clear any previous errors
+
     try {
       const result = await multiAppManager.processFile(pendingPasswordFile, password);
 
       if (!result.success) {
+        // Check if it's a password error
+        if (result.error?.toLowerCase().includes('password')) {
+          setPasswordError(result.error);
+          return; // Keep modal open for retry
+        }
+
         setError(result.error || 'Failed to process file');
         setStage('error');
         setPendingPasswordFile(null);
@@ -99,13 +123,15 @@ export default function Processing() {
         await addAppData(result.appId, result.rawData);
       }
 
+      // Mark file as processed
+      setProcessedFiles(prev => new Set(prev).add(pendingPasswordFile.name));
       setPendingPasswordFile(null);
+      setPasswordError(null);
 
-      // Continue processing
+      // Continue processing remaining files
       processFiles();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to unlock file');
-      setStage('error');
+      setPasswordError(error instanceof Error ? error.message : 'Failed to unlock file');
     }
   };
 
@@ -119,6 +145,7 @@ export default function Processing() {
         fileName={pendingPasswordFile.name}
         onSubmit={handlePasswordSubmit}
         onCancel={() => navigate('/')}
+        error={passwordError}
       />
     );
   }

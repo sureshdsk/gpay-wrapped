@@ -42,9 +42,26 @@ type ViewType = 'activity' | 'transaction' | 'group_expense';
 export default function DataTable() {
   const navigate = useNavigate();
   const { parsedData } = useDataStore();
+
+  // Determine default view based on available data
+  const getDefaultView = (): ViewType => {
+    if (!parsedData) return 'activity';
+
+    // Check if there's any activity data
+    const hasActivityData = parsedData.activities.length > 0;
+
+    // If no activity data, default to transaction view
+    // (BHIM, Paytm, PhonePe only have transaction data)
+    if (!hasActivityData) {
+      return 'transaction';
+    }
+
+    return 'activity';
+  };
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [activeView, setActiveView] = useState<ViewType>('activity');
+  const [activeView, setActiveView] = useState<ViewType>(getDefaultView());
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [yearFilter, setYearFilter] = useState<string>('2025');
   const [monthFilter, setMonthFilter] = useState<string>('all');
