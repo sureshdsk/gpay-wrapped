@@ -3,6 +3,64 @@ import { parseMyActivityHTML } from './htmlParser';
 
 describe('htmlParser', () => {
   describe('parseMyActivityHTML', () => {
+    it('should exclude failed transactions from parsing', () => {
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<body>
+  <div class="outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp">
+    <div class="mdl-grid">
+      <div class="header-cell mdl-cell mdl-cell--12-col">
+        <p class="mdl-typography--title">Google Pay<br></p>
+      </div>
+      <div class="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1">
+        Received ₹60.00<br>4 Dec 2025, 23:07:41 GMT+05:30<br>
+      </div>
+      <div class="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1 mdl-typography--text-right"></div>
+      <div class="content-cell mdl-cell mdl-cell--12-col mdl-typography--caption">
+        <b>Products:</b><br> Google Pay<br><b>Details:</b><br> ldfqyOcETOmpNlWY<br> Failed<br>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      // Failed transaction should be excluded
+      expect(result.data).toHaveLength(0);
+    });
+
+    it('should exclude transactions with empty or missing status', () => {
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<body>
+  <div class="outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp">
+    <div class="mdl-grid">
+      <div class="header-cell mdl-cell mdl-cell--12-col">
+        <p class="mdl-typography--title">Google Pay<br></p>
+      </div>
+      <div class="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1">
+        Received ₹60.00<br>4 Dec 2025, 23:07:32 GMT+05:30<br>
+      </div>
+      <div class="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1 mdl-typography--text-right"></div>
+      <div class="content-cell mdl-cell mdl-cell--12-col mdl-typography--caption">
+        <b>Products:</b><br> Google Pay<br><b>Details:</b><br> nRZ9V8FVTc+UWqPL<br> <br>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const result = parseMyActivityHTML(htmlContent);
+
+      expect(result.success).toBe(true);
+      // Transaction with empty status should be excluded
+      expect(result.data).toHaveLength(0);
+    });
+
     it('should parse valid My Activity HTML with single transaction', () => {
       const htmlContent = `
 <!DOCTYPE html>
