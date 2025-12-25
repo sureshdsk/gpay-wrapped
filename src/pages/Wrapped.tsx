@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useDataStore } from '../stores/dataStore';
 import { useNavigate } from 'react-router-dom';
-import html2canvas from 'html2canvas';
 import { convertToINR } from '../utils/categoryUtils';
 import { filterTransactionsByYear, filterActivitiesByYear } from '../utils/dateUtils';
 import NoDataRedirect from '../components/NoDataRedirect';
@@ -16,6 +15,7 @@ interface SlideData {
   subtitle: string;
   icon: string;
   bgColor: string;
+  bgImage?: string; // Path to background gradient image (added after slide generation)
   detail?: string;
 }
 
@@ -39,12 +39,34 @@ const getCategoryIcon = (category: string): string => {
   return icons[category] || '📊';
 };
 
+// Background gradient images
+const BG_IMAGES = {
+  INTRO_OUTRO: '/bg/codioful-formerly-gradienta-7E5kq_sW0Ew-unsplash.jpg', // Used for first and last slide
+  OTHERS: [
+    '/bg/codioful-formerly-gradienta-Mx688PpeE2A-unsplash.jpg',
+    '/bg/dave-hoefler-PEkfSAxeplg-unsplash.jpg',
+    '/bg/luke-chesser-CxBx_J3yp9g-unsplash.jpg',
+    '/bg/mymind-wHJ5L9KGTl4-unsplash.jpg',
+  ]
+};
+
+// Assign background images to slides
+const assignBackgroundImage = (_slideId: string, slideIndex: number, totalSlides: number): string => {
+  // First and last slides get the intro/outro image
+  if (slideIndex === 0 || slideIndex === totalSlides - 1) {
+    return BG_IMAGES.INTRO_OUTRO;
+  }
+
+  // For other slides, cycle through the 4 available backgrounds
+  const bgIndex = (slideIndex - 1) % BG_IMAGES.OTHERS.length;
+  return BG_IMAGES.OTHERS[bgIndex];
+};
+
 export default function Wrapped() {
   const navigate = useNavigate();
   const { parsedData, insights, filterContext } = useDataStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
-  const [bgStyle, setBgStyle] = useState<'blobs' | 'mesh' | 'particles'>('blobs');
   const slideRef = useRef<HTMLDivElement>(null);
 
   // Generate slides from insights and data
@@ -340,7 +362,14 @@ export default function Wrapped() {
       detail: 'Share with friends!',
     });
 
-    return generatedSlides;
+    // Assign background images to all slides
+    const totalSlides = generatedSlides.length;
+    const slidesWithBg = generatedSlides.map((slide, index) => ({
+      ...slide,
+      bgImage: assignBackgroundImage(slide.id, index, totalSlides)
+    }));
+
+    return slidesWithBg;
   }, [parsedData, insights, filterContext.year]);
 
   const nextSlide = useCallback(() => {
@@ -423,76 +452,107 @@ export default function Wrapped() {
   }, [currentSlide]);
 
   const shareSlide = useCallback(async () => {
-    if (!slideRef.current) return;
+    if (!slideRef.current || !slide.bgImage) return;
 
     setIsSharing(true);
     try {
-      // Disable animations for export by adding a class
-      slideRef.current.classList.add(styles.exportMode);
+      // Canvas dimensions (9:16 aspect ratio for social media)
+      const canvasWidth = 1080;
+      const canvasHeight = 1920;
 
-      // Force a repaint to ensure background is rendered
-      void slideRef.current.offsetHeight;
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext('2d');
 
-      // Wait for layout to stabilize and background to render
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
 
-      const canvas = await html2canvas(slideRef.current, {
-        backgroundColor: '#000000', // Black background for any transparent areas
-        scale: 4, // Higher quality
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-        imageTimeout: 15000,
-        windowWidth: slideRef.current.scrollWidth,
-        windowHeight: slideRef.current.scrollHeight,
-        onclone: (clonedDoc) => {
-          // Ensure the cloned element has proper styling
-          const clonedSlide = clonedDoc.querySelector(`.${styles.slide}`) as HTMLElement;
-          if (clonedSlide) {
-            // Keep the original background with blobs/particles
-            clonedSlide.style.opacity = '1';
-            clonedSlide.style.position = 'relative';
-            clonedSlide.style.overflow = 'hidden';
+      // Load and draw background image
+      const bgImg = new Image();
+      bgImg.crossOrigin = 'anonymous';
 
-            // Ensure blob container is visible if using blobs
-            const blobContainer = clonedSlide.querySelector(`.${styles.blobContainer}`) as HTMLElement;
-            if (blobContainer) {
-              blobContainer.style.opacity = '1';
-              const blobs = blobContainer.querySelectorAll('[class*="blob"]');
-              blobs.forEach((blob: any) => {
-                if (blob.style) {
-                  blob.style.opacity = '0.8';
-                }
-              });
-            }
-
-            // Ensure particles are visible if using particles
-            const particleContainer = clonedSlide.querySelector(`.${styles.particleContainer}`) as HTMLElement;
-            if (particleContainer) {
-              particleContainer.style.opacity = '1';
-            }
-
-            // Ensure mesh is visible if using mesh
-            const meshContainer = clonedSlide.querySelector(`.${styles.meshContainer}`) as HTMLElement;
-            if (meshContainer) {
-              meshContainer.style.opacity = '1';
-            }
-
-            // Make all text white for contrast
-            const allTextElements = clonedSlide.querySelectorAll('.slideTitle, .slideValue, .slideSubtitle, .slideDetail, .watermark');
-            allTextElements.forEach((el: any) => {
-              if (el.style) {
-                el.style.color = '#ffffff';
-                el.style.opacity = '1';
-                el.style.textShadow = '0 4px 20px rgba(0, 0, 0, 0.5)';
-              }
-            });
-          }
-        },
+      await new Promise((resolve, reject) => {
+        bgImg.onload = resolve;
+        bgImg.onerror = reject;
+        bgImg.src = slide.bgImage!;
       });
 
-      // Re-enable animations after capture
-      slideRef.current.classList.remove(styles.exportMode);
+      // Draw background image
+      ctx.drawImage(bgImg, 0, 0, canvasWidth, canvasHeight);
+
+      // Calculate vertical center
+      const centerY = canvasHeight / 2;
+
+      // Set up default text styling
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+
+      // Draw icon (emoji) - matching text-7xl (~112px)
+      ctx.font = '220px "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", Arial';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+      ctx.fillText(slide.icon, canvasWidth / 2, centerY - 280);
+
+      // Draw title - matching text-lg font-bold (~18px → 48px scaled)
+      ctx.font = '700 52px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText(slide.title, canvasWidth / 2, centerY - 80);
+
+      // Draw value (main text) - matching 3.2rem font-weight-900 (~51px → 140px scaled)
+      ctx.font = '900 140px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 24;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+
+      // Handle multi-line text if value is too long
+      const maxWidth = canvasWidth * 0.9;
+      const words = slide.value.split(' ');
+      let line = '';
+      let y = centerY + 60;
+
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, canvasWidth / 2, y);
+          line = words[i] + ' ';
+          y += 150;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, canvasWidth / 2, y);
+
+      // Draw subtitle - matching text-base font-600 (~16px → 44px scaled)
+      const subtitleY = y + 100;
+      ctx.font = '600 44px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+      ctx.shadowBlur = 10;
+      ctx.fillText(slide.subtitle, canvasWidth / 2, subtitleY);
+
+      // Draw detail if exists - matching 15px font-600 (~40px scaled)
+      if (slide.detail) {
+        ctx.font = '600 38px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.shadowBlur = 8;
+        ctx.fillText(slide.detail, canvasWidth / 2, subtitleY + 80);
+      }
+
+      // Draw watermark at bottom - matching text-xs font-medium (~12px → 32px scaled)
+      ctx.font = '500 32px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('finnlens.com', canvasWidth / 2, canvasHeight - 80);
 
       // Convert to blob and share or download
       canvas.toBlob(async (blob) => {
@@ -544,31 +604,6 @@ export default function Wrapped() {
       {/* Header */}
       <div className={styles.header}>
         <h1 className={styles.headerTitle}>FinnLens {filterContext.year === 'all' ? 'All Time' : filterContext.year}</h1>
-
-        {/* Background Style Selector */}
-        <div className={styles.bgSelector}>
-          <button
-            className={`${styles.bgBtn} ${bgStyle === 'blobs' ? styles.active : ''}`}
-            onClick={() => setBgStyle('blobs')}
-            title="Blob Animation"
-          >
-            🫧
-          </button>
-          <button
-            className={`${styles.bgBtn} ${bgStyle === 'mesh' ? styles.active : ''}`}
-            onClick={() => setBgStyle('mesh')}
-            title="Geometric Mesh"
-          >
-            🔺
-          </button>
-          <button
-            className={`${styles.bgBtn} ${bgStyle === 'particles' ? styles.active : ''}`}
-            onClick={() => setBgStyle('particles')}
-            title="Particle System"
-          >
-            ✨
-          </button>
-        </div>
       </div>
 
       {/* Progress bar */}
@@ -600,121 +635,29 @@ export default function Wrapped() {
           <div
             ref={slideRef}
             className={styles.slide}
-            style={{ position: 'relative', overflow: 'hidden' }}
+            style={{
+              position: 'relative',
+              overflow: 'hidden'
+            }}
           >
-            {/* Dynamic Background based on selection */}
-            {bgStyle === 'blobs' && (
-              <div className={styles.blobContainer}>
-                <div
-                  className={styles.blob1}
-                  style={{ backgroundColor: slide.bgColor }}
-                />
-                <div
-                  className={styles.blob2}
-                  style={{ backgroundColor: slide.bgColor, opacity: 0.7 }}
-                />
-                <div
-                  className={styles.blob3}
-                  style={{ backgroundColor: slide.bgColor, opacity: 0.5 }}
-                />
-              </div>
+            {/* Background image as actual img element for reliable html2canvas capture */}
+            {slide.bgImage && (
+              <img
+                src={slide.bgImage}
+                alt=""
+                className={styles.slideBackgroundImage}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  zIndex: 0
+                }}
+              />
             )}
-
-            {bgStyle === 'mesh' && (
-              <div className={styles.meshContainer}>
-                <svg className={styles.triangleMesh} viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
-                  <defs>
-                    <linearGradient id="meshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" style={{ stopColor: slide.bgColor, stopOpacity: 0.6 }} />
-                      <stop offset="100%" style={{ stopColor: slide.bgColor, stopOpacity: 0.2 }} />
-                    </linearGradient>
-                  </defs>
-                  <g>
-                    {[...Array(20)].map((_, i) => {
-                      const x = (i % 5) * 100 + Math.random() * 20;
-                      const y = Math.floor(i / 5) * 100 + Math.random() * 20;
-                      const x2 = x + 80 + Math.random() * 20;
-                      const y2 = y + Math.random() * 40;
-                      const x3 = x + Math.random() * 40;
-                      const y3 = y + 80 + Math.random() * 20;
-                      return (
-                        <polygon
-                          key={i}
-                          points={`${x},${y} ${x2},${y2} ${x3},${y3}`}
-                          fill="url(#meshGrad)"
-                          stroke={slide.bgColor}
-                          strokeWidth="0.5"
-                          opacity="0.3"
-                          className={styles.meshTriangle}
-                          style={{ animationDelay: `${i * 0.1}s` }}
-                        />
-                      );
-                    })}
-                  </g>
-                </svg>
-              </div>
-            )}
-
-            {bgStyle === 'particles' && (
-              <div className={styles.particleContainer}>
-                {[...Array(30)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={styles.particleDot}
-                    style={{
-                      backgroundColor: slide.bgColor,
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 5}s`,
-                      animationDuration: `${10 + Math.random() * 20}s`,
-                      width: `${2 + Math.random() * 4}px`,
-                      height: `${2 + Math.random() * 4}px`,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Animated background elements */}
-            <div className={styles.animatedBg}>
-              <div className={styles.particle1}></div>
-              <div className={styles.particle2}></div>
-              <div className={styles.particle3}></div>
-              <div className={styles.glowOrb}></div>
-
-              {/* Floating emojis */}
-              <div className={styles.floatingEmoji1}>✨</div>
-              <div className={styles.floatingEmoji2}>💫</div>
-              <div className={styles.floatingEmoji3}>⭐</div>
-
-              {/* Animated shapes */}
-              <div className={styles.shape1}></div>
-              <div className={styles.shape2}></div>
-
-              {/* New creative elements */}
-              <div className={styles.wavePattern}></div>
-              <div className={styles.hexGrid}>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className={styles.hex} style={{ animationDelay: `${i * 0.2}s` }}></div>
-                ))}
-              </div>
-
-              {/* Neon lines removed */}
-
-              {/* Bubble effects */}
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={`bubble-${i}`}
-                  className={styles.bubble}
-                  style={{
-                    left: `${20 + i * 15}%`,
-                    animationDelay: `${i * 0.5}s`,
-                    width: `${30 + i * 10}px`,
-                    height: `${30 + i * 10}px`
-                  }}
-                />
-              ))}
-            </div>
 
             <div className={styles.slideContent}>
               <div className={styles.slideIcon}>{slide.icon}</div>

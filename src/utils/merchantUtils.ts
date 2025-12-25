@@ -199,7 +199,7 @@ export function groupTransactionsByMerchant<T extends { description: string; amo
 
   // Convert to array and sort by amount
   const sorted = Array.from(merchantMap.entries())
-    .map(([key, data]) => ({
+    .map(([_key, data]) => ({
       name: data.displayName.length > 25 ? data.displayName.substring(0, 25) + '...' : data.displayName,
       fullName: data.displayName,
       amount: Math.round(data.amount),

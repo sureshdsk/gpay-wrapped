@@ -125,9 +125,10 @@ export default function Categories() {
       .sort((a, b) => b.amount - a.amount);
   }, [allItemsWithCategory]);
 
-  const totalSpent = useMemo(() => {
-    return categoryData.reduce((sum, cat) => sum + cat.amount, 0);
-  }, [categoryData]);
+  // Total spent is already calculated in categoryData percentages
+  // const totalSpent = useMemo(() => {
+  //   return categoryData.reduce((sum, cat) => sum + cat.amount, 0);
+  // }, [categoryData]);
 
   if (!parsedData) {
     return <NoDataRedirect />;

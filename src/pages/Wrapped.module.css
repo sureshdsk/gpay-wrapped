@@ -804,6 +804,17 @@
   transition: none !important;
 }
 
+.slideBackgroundImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
 .slideContent {
   @apply absolute inset-0 flex flex-col items-center justify-center
          text-white text-center p-10;
