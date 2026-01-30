@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsr generate:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo build:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo tree:*)"
+    ]
+  }
+}

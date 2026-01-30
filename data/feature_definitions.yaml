@@ -1,0 +1,64 @@
+# Feature Definitions Seed Data
+- key: dark_mode
+  name: Dark Mode
+  description: Enable dark theme across the application
+  category: ui
+  default_enabled: true
+  is_premium: false
+  sort_order: 1
+
+- key: budget_tracking
+  name: Budget Tracking
+  description: Create and track budgets by category
+  category: finance
+  default_enabled: true
+  is_premium: false
+  sort_order: 2
+
+- key: transaction_categorization
+  name: Auto-Categorization
+  description: Automatically categorize transactions based on patterns
+  category: finance
+  default_enabled: true
+  is_premium: false
+  sort_order: 3
+
+- key: recurring_detection
+  name: Recurring Transaction Detection
+  description: Automatically detect and flag recurring transactions
+  category: finance
+  default_enabled: false
+  is_premium: true
+  sort_order: 4
+
+- key: spending_insights
+  name: Spending Insights
+  description: Get AI-powered insights about your spending patterns
+  category: analytics
+  default_enabled: false
+  is_premium: true
+  sort_order: 5
+
+- key: export_data
+  name: Export Data
+  description: Export transactions and reports to CSV/PDF
+  category: data
+  default_enabled: true
+  is_premium: false
+  sort_order: 6
+
+- key: multi_currency
+  name: Multi-Currency Support
+  description: Track accounts in different currencies
+  category: finance
+  default_enabled: false
+  is_premium: true
+  sort_order: 7
+
+- key: notification_alerts
+  name: Smart Alerts
+  description: Get notified about unusual transactions and low balances
+  category: notifications
+  default_enabled: false
+  is_premium: true
+  sort_order: 8

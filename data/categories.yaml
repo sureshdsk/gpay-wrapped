@@ -1,0 +1,128 @@
+# Default System Categories Seed Data
+# Expense Categories
+- name: Food & Dining
+  color: "#ef4444"
+  icon: restaurant
+  category_type: expense
+  is_system: true
+
+- name: Shopping
+  color: "#f97316"
+  icon: shopping_bag
+  category_type: expense
+  is_system: true
+
+- name: Transportation
+  color: "#eab308"
+  icon: directions_car
+  category_type: expense
+  is_system: true
+
+- name: Bills & Utilities
+  color: "#22c55e"
+  icon: receipt
+  category_type: expense
+  is_system: true
+
+- name: Entertainment
+  color: "#06b6d4"
+  icon: movie
+  category_type: expense
+  is_system: true
+
+- name: Healthcare
+  color: "#3b82f6"
+  icon: local_hospital
+  category_type: expense
+  is_system: true
+
+- name: Education
+  color: "#8b5cf6"
+  icon: school
+  category_type: expense
+  is_system: true
+
+- name: Travel
+  color: "#ec4899"
+  icon: flight
+  category_type: expense
+  is_system: true
+
+- name: Personal Care
+  color: "#14b8a6"
+  icon: spa
+  category_type: expense
+  is_system: true
+
+- name: Groceries
+  color: "#84cc16"
+  icon: local_grocery_store
+  category_type: expense
+  is_system: true
+
+- name: Housing
+  color: "#a855f7"
+  icon: home
+  category_type: expense
+  is_system: true
+
+- name: Insurance
+  color: "#64748b"
+  icon: security
+  category_type: expense
+  is_system: true
+
+- name: Subscriptions
+  color: "#0ea5e9"
+  icon: subscriptions
+  category_type: expense
+  is_system: true
+
+- name: Other Expense
+  color: "#78716c"
+  icon: more_horiz
+  category_type: expense
+  is_system: true
+
+# Income Categories
+- name: Salary
+  color: "#22c55e"
+  icon: payments
+  category_type: income
+  is_system: true
+
+- name: Freelance
+  color: "#3b82f6"
+  icon: work
+  category_type: income
+  is_system: true
+
+- name: Investment Income
+  color: "#8b5cf6"
+  icon: trending_up
+  category_type: income
+  is_system: true
+
+- name: Rental Income
+  color: "#f97316"
+  icon: apartment
+  category_type: income
+  is_system: true
+
+- name: Gifts Received
+  color: "#ec4899"
+  icon: card_giftcard
+  category_type: income
+  is_system: true
+
+- name: Refunds
+  color: "#06b6d4"
+  icon: replay
+  category_type: income
+  is_system: true
+
+- name: Other Income
+  color: "#78716c"
+  icon: more_horiz
+  category_type: income
+  is_system: true
